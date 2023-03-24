@@ -1,3 +1,3 @@
 # CryptoApp
 
-Aplicaç
+Aplic
