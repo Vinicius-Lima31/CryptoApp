@@ -2,113 +2,102 @@ package com.gm2.cryptoapp.repository;
 
 import com.gm2.cryptoapp.dto.coinTransationDTO;
 import com.gm2.cryptoapp.entity.Coin;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Repository
 @EnableAutoConfiguration
 public class coinRepository {
 
-    // SCRIPT do INSERT
-    private static String INSERT = "insert into coin " +
-            "(name, price, quantity, datetime) " +
-            "values (?,?,?,?)";
+    // Pegar o EntityManager
+    // Constructor do EntityManager (instanciando)
+    @Autowired
+    private EntityManager entityManager;
 
-    // SCRIPT SELECT
-    private static String SELECT_ALL = "select name, " +
-            "sum(quantity) as quantity " +
-            " from coin group by name";
-
-    // SCRIPT SELECT NOME DA MOEDA
-    private static String SELECT_BY_NAME = "select * from coin" +
-            " where name = ?";
-
-    // SCRIPT DELETE
-    private static String DELETE = "delete from coin" +
-            " where id = ?";
-
-    // SCRIPT UPDATE
-    private static String UPDATE = "update coin set " +
-            "name = ?, " +
-            "price = ?, " +
-            "quantity = ? " +
-            "where id = ?";
-
-    // Pegar nosso JDBC
-    private JdbcTemplate jdbcTemplate;
-
-    // Constructor do JDBC (instanciando)
-    public coinRepository(JdbcTemplate jdbcTemplate) { this.jdbcTemplate = jdbcTemplate; }
 
     // INSERT
+    @Transactional
     public Coin insert(Coin coin){
-        Object[] attr = new Object[]{
-            coin.getName(),
-            coin.getPrice(),
-            coin.getQuantity(),
-            coin.getDateTime()
-        };
-
-        jdbcTemplate.update(INSERT, attr);
+        entityManager.persist(coin);
         return coin;
     }
 
     // UPDATE
+    @Transactional
     public Coin update(Coin coin) {
-        Object[] attr = new Object[] {
-            coin.getName(),
-            coin.getPrice(),
-            coin.getQuantity(),
-            coin.getId()
-        };
-
-        jdbcTemplate.update(UPDATE, attr);
-
+        entityManager.merge(coin);
         return coin;
     }
 
     // SELECT DE TUDO
+    @Transactional
     public List<coinTransationDTO> getAll(){
-        return jdbcTemplate.query(SELECT_ALL, new RowMapper<coinTransationDTO>() {
-            @Override
-            public coinTransationDTO mapRow(ResultSet rs, int rowNum) throws SQLException {
-                coinTransationDTO coinDTO = new coinTransationDTO();
+        // jpql é parecido com SQL, mas não é a mesma coisa, mas com ele fazemos uma consulta
+        String jpql = "select new com.gm2.cryptoapp.dto.coinTransationDTO(c.name, sum(c.quantity)) from Coin c group by c.name";
 
-                coinDTO.setName(rs.getString("name"));
-                coinDTO.setQuantity(rs.getBigDecimal("quantity"));
+        // entityManager.createQuery ele retorna um TypedQuery<T> com isso temos
+        TypedQuery<coinTransationDTO> query = entityManager.createQuery(jpql, coinTransationDTO.class);
 
-                return coinDTO;
-            }
-        });
+        return query.getResultList();
     }
 
     // SELECT POR NAME
+    @Transactional
     public List<Coin> getByName(String name){
+        String jpql = "select c from Coin c where c.name like :name";
 
-        return jdbcTemplate.query(SELECT_BY_NAME, new RowMapper<Coin>() {
-            @Override
-            public Coin mapRow(ResultSet rs, int rowNum) throws SQLException {
+        TypedQuery<Coin> query = entityManager.createQuery(jpql, Coin.class);
 
-                Coin coin = new Coin();
-                coin.setId(rs.getByte("id"));
-                coin.setName(rs.getString("name"));
-                coin.setPrice(rs.getBigDecimal("price"));
-                coin.setQuantity(rs.getBigDecimal("quantity"));
-                coin.setDateTime(rs.getTimestamp("dateTime"));
+        // Substituindo o :name pelo name daqui, lembrando que ele vem dos parametros
+        query.setParameter("name", "%" + name + "%");
 
-                return coin;
+        return query.getResultList();
+    }
+
+    // SELECT GERAL
+    @Transactional
+    public List<Coin> getAllTheSame(){
+        String jpql = "select c from Coin c";
+        TypedQuery<Coin> query = entityManager.createQuery(jpql, Coin.class);
+
+        return query.getResultList();
+    }
+
+/*
+    // SELECT POR ID
+    public List<Coin> getById(int id){
+        String jpql = "select c from Coin c where c.id= :id";
+
+        TypedQuery<Coin> query = entityManager.createQuery(jpql, Coin.class);
+
+        query.setParameter("id", id);
+
+        return query.getResultList();
+    }
+
+
+ */
+
+
+   // DELETE
+    @Transactional
+    public boolean remove(int id) {
+        Coin coin = entityManager.find(Coin.class, id);
+
+        /* Não entendi o pq desse if, mas vou deixar comentado aqui!!
+            if(!entityManager.contains(coin)){
+                coin = entityManager.merge(coin);
             }
-        }, name);
+         */
+
+        entityManager.remove(coin);
+        return true;
     }
 
-    // DELETE
-    public int remove(int id) {
-        return jdbcTemplate.update(DELETE, id);
-    }
 }

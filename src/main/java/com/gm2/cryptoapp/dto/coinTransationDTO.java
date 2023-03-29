@@ -7,6 +7,11 @@ public class coinTransationDTO {
     private String name;
     private BigDecimal quantity;
 
+    public coinTransationDTO(String name, BigDecimal quantity) {
+        this.name = name;
+        this.quantity = quantity;
+    }
+
     public String getName() {
         return name;
     }
