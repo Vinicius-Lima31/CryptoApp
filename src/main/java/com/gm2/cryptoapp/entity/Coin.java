@@ -1,14 +1,34 @@
 package com.gm2.cryptoapp.entity;
 
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
+// Usando agora Spring JPA
+// Definindo ela como @Enitity
+// E fazendo seu mapeamento lá com a tabela coin do nosso Banco de dados com @Table(name = "nome da tabela")
+@Entity
+@Table(name = "coin")
 public class Coin {
 
+    // Definindo seu id
+    // Usando @GeneratedValue para ele se autogerenciar, e usando o strategy para ele se autoincrementar
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    // Usamos @Column para mapear com as colunas que temos no nosso banco de dados
+
+    @Column(name = "NAME")
     private String name;
+
+    @Column(name = "PRICE")
     private BigDecimal price;
+
+    @Column(name = "QUANTITY")
     private BigDecimal quantity;
+
+    @Column(name = "DATETIME")
     private Timestamp dateTime;
 
     public int getId() {
