@@ -16,14 +16,17 @@ No momento está sem o front end, em breve  irei estar  aplicando o VueJS na apl
 ## Banco de dados MySQL
 
 ``` 
-CREATE TABLE coin
+CREATE TABLE IF NOT EXISTS `crypto_db`.`coin` 
 (
-    ID INTEGER PRIMARY KEY AUTO_INCREMENT,
-    NAME VARCHAR(100),
-    DATETIME TIMESTAMP,
-    PRICE NUMERIC(20,2),
-    QUANTITY NUMERIC(20,10)
-); 
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `NAME` VARCHAR(100) NULL,
+  `DATETIME` TIMESTAMP NULL,
+  `PRICE` DECIMAL(20,2) NULL,
+  `QUANTITY` DECIMAL(20,10) NULL,
+  PRIMARY KEY (`ID`)
+)
+ENGINE = InnoDB
 ```
 
 ### Com utilização do Jpql como Script para consultas no nosso Banco de Dados.
+Utilizei Spring JPA para fazer a consulta nos dados do banco.
